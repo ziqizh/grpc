@@ -23,18 +23,18 @@
 #include <grpcpp/grpcpp.h>
 
 #ifdef BAZEL_BUILD
-#include "examples/protos/helloworld.grpc.pb.h"
+#include "examples/protos/supplyfinder.grpc.pb.h"
 #else
-#include "helloworld.grpc.pb.h"
+#include "supplyfinder.grpc.pb.h"
 #endif
 
 using grpc::Channel;
 using grpc::ClientContext;
 using grpc::Status;
-using helloworld::HelloRequest;
-using helloworld::HelloReply;
-using helloworld::SupplierGreeter;
-using helloworld::VendorGreeter;
+using supplyfinder::HelloRequest;
+using supplyfinder::HelloReply;
+using supplyfinder::SupplierGreeter;
+using supplyfinder::VendorGreeter;
 
 class GreeterClient {
  public:

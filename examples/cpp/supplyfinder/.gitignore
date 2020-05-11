@@ -1,0 +1,9 @@
+*.o
+*.pb.cc
+*.pb.h
+supplier_server
+vendor_server
+client
+cmake/
+cmake_externalproject
+cocoapods
