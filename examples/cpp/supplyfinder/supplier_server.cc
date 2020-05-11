@@ -36,23 +36,25 @@ using grpc::Server;
 using grpc::ServerBuilder;
 using grpc::ServerContext;
 using grpc::Status;
+using grpc::StatusCode;
 using supplyfinder::HelloRequest;
 using supplyfinder::HelloReply;
 using supplyfinder::FoodID;
 using supplyfinder::VendorInfo;
 using supplyfinder::Supplier;
 
+std::unordered_map<uint32_t, VendorInfo> vendor_db;
+
+void InitDB () {
+  VendorInfo vendor1;
+  vendor1.set_url("localhost:10933");
+  vendor1.set_name("Kroger");
+  vendor1.set_location("Ann Arbor, MI");
+  vendor_db[1] = vendor1;
+}
+
 // Logic and data behind the server's behavior.
 class SupplierServiceImpl final : public Supplier::Service {
-  
-  std::unordered_map<uint32_t, VendorInfo> vendor_db;
-  void InitDB () {
-    VendorInfo vendor1;
-    vendor1.set_url("localhost:10933");
-    vendor1.set_name("Kroger");
-    vendor1.set_location("Ann Arbor, MI");
-    vendor_db[1] = vendor1;
-  }
   Status SayHello(ServerContext* context, const HelloRequest* request,
                   HelloReply* reply) override {
     std::string prefix("Hello ");
@@ -62,10 +64,12 @@ class SupplierServiceImpl final : public Supplier::Service {
 
   Status CheckVendor(ServerContext* context, const FoodID* request,
                   VendorInfo* reply) override {
+    std::cout << "supplier server received id: " << request->food_id() << std::endl;
     if (vendor_db.find(request->food_id()) == vendor_db.end()) {
-      return Status::CANCELLED;
+      Status status(StatusCode::NOT_FOUND, "Food ID not found.");
+      return status;
     }
-
+    reply->set_url(vendor_db[request->food_id()].url());
     return Status::OK;
   }
 };
@@ -93,6 +97,7 @@ void RunServer() {
 }
 
 int main(int argc, char** argv) {
+  InitDB();
   RunServer();
 
   return 0;

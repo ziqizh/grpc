@@ -19,6 +19,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <cstdint>
 
 #include <grpcpp/grpcpp.h>
 
@@ -35,6 +36,8 @@ using supplyfinder::HelloRequest;
 using supplyfinder::HelloReply;
 using supplyfinder::Supplier;
 using supplyfinder::Vendor;
+using supplyfinder::FoodID;
+using supplyfinder::VendorInfo;
 
 class GreeterClient {
  public:
@@ -94,6 +97,27 @@ class GreeterClient {
       return "RPC failed";
     }
   }
+  
+  VendorInfo InquireVendorInfo (uint32_t food_id) {
+    FoodID request;
+    request.set_food_id(food_id);
+    
+    VendorInfo info;
+    
+    ClientContext context;
+    
+    Status status = supplier_stub_->CheckVendor(&context, request, &info);
+    
+    if (status.ok()) {
+      return info;
+    } else {
+      std::cout << status.error_code() << ": " << status.error_message()
+                << std::endl;
+      info.set_url("RPC failed");
+      return info;
+    }
+  }
+  
 
  private:
   std::unique_ptr<Supplier::Stub> supplier_stub_;
@@ -130,12 +154,21 @@ int main(int argc, char** argv) {
   GreeterClient greeter(grpc::CreateChannel(
       target_str, grpc::InsecureChannelCredentials()), grpc::CreateChannel(
           vendor_target_string, grpc::InsecureChannelCredentials()));
-  std::string user("supplier");
-  std::string reply = greeter.SayHelloToSupplier(user);
-  std::cout << "Greeter received: " << reply << std::endl;
-  user = "vendor";
-  reply = greeter.SayHelloToVendor(user);
-  std::cout << "Greeter received: " << reply << std::endl;
+  // std::string user("supplier");
+  // std::string reply = greeter.SayHelloToSupplier(user);
+  // std::cout << "Greeter received: " << reply << std::endl;
+  // user = "vendor";
+  // reply = greeter.SayHelloToVendor(user);
+  // std::cout << "Greeter received: " << reply << std::endl;
+  
+  std::cout << "========== Testing Supplier Server ==========" << std::endl;
+  std::cout << "Queryiny FoodID = 1 (exist)" << std::endl;
+  VendorInfo info = greeter.InquireVendorInfo(1);
+  std::cout << "Vendor info received: " << info.url() << std::endl;
+  std::cout << "Queryiny FoodID = 2 (doesn't exist)" << std::endl;
+  info = greeter.InquireVendorInfo(2);
+  std::cout << "Vendor info received: " << info.url() << std::endl;
+  
 
   return 0;
 }
