@@ -73,7 +73,7 @@ class SupplierServiceImpl final : public Supplier::Service {
 void RunServer() {
   std::string server_address("0.0.0.0:50051");
   SupplierServiceImpl service;
-  service.InitDB();
+  // service.InitDB();
 
   grpc::EnableDefaultHealthCheckService(true);
   grpc::reflection::InitProtoReflectionServerBuilderPlugin();
