@@ -33,15 +33,15 @@ using grpc::ClientContext;
 using grpc::Status;
 using supplyfinder::HelloRequest;
 using supplyfinder::HelloReply;
-using supplyfinder::SupplierGreeter;
-using supplyfinder::VendorGreeter;
+using supplyfinder::Supplier;
+using supplyfinder::Vendor;
 
 class GreeterClient {
  public:
   GreeterClient(std::shared_ptr<Channel> supplier_channel,
     std::shared_ptr<Channel> vendor_channel)
-      : supplier_stub_(SupplierGreeter::NewStub(supplier_channel)),
-      vendor_stub_(VendorGreeter::NewStub(vendor_channel)) {}
+      : supplier_stub_(Supplier::NewStub(supplier_channel)),
+      vendor_stub_(Vendor::NewStub(vendor_channel)) {}
 
   // Assembles the client's payload, sends it and presents the response back
   // from the server.
@@ -96,8 +96,8 @@ class GreeterClient {
   }
 
  private:
-  std::unique_ptr<SupplierGreeter::Stub> supplier_stub_;
-  std::unique_ptr<VendorGreeter::Stub> vendor_stub_;
+  std::unique_ptr<Supplier::Stub> supplier_stub_;
+  std::unique_ptr<Vendor::Stub> vendor_stub_;
 };
 
 int main(int argc, char** argv) {

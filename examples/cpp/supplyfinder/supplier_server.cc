@@ -19,6 +19,8 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <unordered_map>
+#include <cstdint>
 
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/health_check_service_interface.h>
@@ -36,14 +38,34 @@ using grpc::ServerContext;
 using grpc::Status;
 using supplyfinder::HelloRequest;
 using supplyfinder::HelloReply;
+using supplyfinder::FoodID;
+using supplyfinder::VendorInfo;
 using supplyfinder::Supplier;
 
 // Logic and data behind the server's behavior.
 class SupplierServiceImpl final : public Supplier::Service {
+  
+  std::unordered_map<uint32_t, VendorInfo> vendor_db;
+  void InitDB () {
+    VendorInfo vendor1;
+    vendor1.set_url("localhost:10933");
+    vendor1.set_name("Kroger");
+    vendor1.set_location("Ann Arbor, MI");
+    vendor_db[1] = vendor1;
+  }
   Status SayHello(ServerContext* context, const HelloRequest* request,
                   HelloReply* reply) override {
     std::string prefix("Hello ");
     reply->set_message(prefix + request->name());
+    return Status::OK;
+  }
+
+  Status CheckVendor(ServerContext* context, const FoodID* request,
+                  VendorInfo* reply) override {
+    if (vendor_db.find(request->food_id()) == vendor_db.end()) {
+      return Status::CANCELLED;
+    }
+
     return Status::OK;
   }
 };
@@ -51,6 +73,7 @@ class SupplierServiceImpl final : public Supplier::Service {
 void RunServer() {
   std::string server_address("0.0.0.0:50051");
   SupplierServiceImpl service;
+  service.InitDB();
 
   grpc::EnableDefaultHealthCheckService(true);
   grpc::reflection::InitProtoReflectionServerBuilderPlugin();
