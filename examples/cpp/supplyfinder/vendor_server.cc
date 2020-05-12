@@ -19,6 +19,8 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <unordered_map>
+#include <cstdint>
 
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/health_check_service_interface.h>
@@ -34,9 +36,29 @@ using grpc::Server;
 using grpc::ServerBuilder;
 using grpc::ServerContext;
 using grpc::Status;
+using grpc::StatusCode;
 using supplyfinder::HelloRequest;
 using supplyfinder::HelloReply;
 using supplyfinder::Vendor;
+using supplyfinder::FoodID;
+using supplyfinder::InventoryInfo;
+
+std::unordered_map<uint32_t, InventoryInfo> inventory_db;
+
+void InitDB () {
+  /*
+   * Dummy database which contains :
+   * id 1: price 19.5, quantity 10
+   * id 3: price 2.99, quantity 2
+   */
+  InventoryInfo inv;
+  inv.set_price(19.5);
+  inv.set_quantity(10);
+  inventory_db[1] = inv;
+  inv.set_price(2.99);
+  inv.set_quantity(2);
+  inventory_db[3] = inv;
+}
 
 // Logic and data behind the server's behavior.
 class VendorServiceImpl final : public Vendor::Service {
@@ -44,6 +66,18 @@ class VendorServiceImpl final : public Vendor::Service {
                   HelloReply* reply) override {
     std::string prefix("Hello ");
     reply->set_message(prefix + request->name());
+    return Status::OK;
+  }
+  
+  Status CheckInventory (ServerContext* context, const FoodID* request,
+                  InventoryInfo* info) {
+    uint32_t food_id = request->food_id();
+    if (inventory_db.find(food_id) == inventory_db.end()) {
+      Status status(StatusCode::NOT_FOUND, "Food ID not found.");
+      return status;
+    }
+    info->set_price(inventory_db[food_id].price());
+    info->set_quantity(inventory_db[food_id].quantity());
     return Status::OK;
   }
 };
@@ -71,6 +105,7 @@ void RunServer() {
 
 int main(int argc, char** argv) {
   int server_number;
+  InitDB();
   RunServer();
 
   return 0;

@@ -46,11 +46,11 @@ using supplyfinder::Supplier;
 std::unordered_map<uint32_t, VendorInfo> vendor_db;
 
 void InitDB () {
-  VendorInfo vendor1;
-  vendor1.set_url("localhost:10933");
-  vendor1.set_name("Kroger");
-  vendor1.set_location("Ann Arbor, MI");
-  vendor_db[1] = vendor1;
+  VendorInfo vendor;
+  vendor.set_url("localhost:50052");
+  vendor.set_name("Kroger");
+  vendor.set_location("Ann Arbor, MI");
+  vendor_db[1] = vendor;
 }
 
 // Logic and data behind the server's behavior.
@@ -66,10 +66,11 @@ class SupplierServiceImpl final : public Supplier::Service {
                   VendorInfo* reply) override {
     std::cout << "supplier server received id: " << request->food_id() << std::endl;
     if (vendor_db.find(request->food_id()) == vendor_db.end()) {
-      Status status(StatusCode::NOT_FOUND, "Food ID not found.");
-      return status;
+      return Status(StatusCode::NOT_FOUND, "Food ID not found.");;
     }
     reply->set_url(vendor_db[request->food_id()].url());
+    reply->set_name(vendor_db[request->food_id()].name());
+    reply->set_location(vendor_db[request->food_id()].location());
     return Status::OK;
   }
 };
