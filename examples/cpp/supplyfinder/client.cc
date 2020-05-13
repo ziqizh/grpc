@@ -185,9 +185,9 @@ vector<pair<VendorInfo, InventoryInfo>> ProcessRequest(const std::string& suppli
 void PrintResult (const uint32_t id, const vector<pair<VendorInfo, InventoryInfo>>& result) {
   std::cout << "The food ID is " << id << std::endl;
   for (auto & p : result) {
-    std::cout << "Vendor url: " << p.first.url() << " name: " << p.first.name()
-      << " location: " << p.first.location() << std::endl;
-    std::cout << "Inventory price: " << p.second.price() << " quantity: " << p.second.quantity()
+    std::cout << "Vendor url: " << p.first.url() << "; name: " << p.first.name()
+      << "; location: " << p.first.location() << std::endl;
+    std::cout << "Inventory price: " << p.second.price() << "; quantity: " << p.second.quantity()
       << std::endl;
   }
 }

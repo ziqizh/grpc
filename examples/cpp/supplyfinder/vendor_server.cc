@@ -21,6 +21,8 @@
 #include <string>
 #include <unordered_map>
 #include <cstdint>
+#include <thread>
+#include <vector>
 
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/health_check_service_interface.h>
@@ -43,25 +45,23 @@ using supplyfinder::Vendor;
 using supplyfinder::FoodID;
 using supplyfinder::InventoryInfo;
 
-std::unordered_map<uint32_t, InventoryInfo> inventory_db;
-
-void InitDB () {
-  /*
-   * Dummy database which contains :
-   * id 1: price 19.5, quantity 10
-   * id 3: price 2.99, quantity 2
-   */
-  InventoryInfo inv;
-  inv.set_price(19.5);
-  inv.set_quantity(10);
-  inventory_db[1] = inv;
-  inv.set_price(2.99);
-  inv.set_quantity(2);
-  inventory_db[3] = inv;
-}
-
 // Logic and data behind the server's behavior.
 class VendorServiceImpl final : public Vendor::Service {
+  public:
+  VendorServiceImpl () {
+    /*
+     * Dummy database which contains :
+     * id 1: price 19.5, quantity 10
+     * id 3: price 2.99, quantity 2
+     */
+    InventoryInfo inv;
+    inv.set_price(19.5);
+    inv.set_quantity(10);
+    inventory_db[1] = inv;
+    inv.set_price(2.99);
+    inv.set_quantity(2);
+    inventory_db[3] = inv;
+  }
   Status SayHello(ServerContext* context, const HelloRequest* request,
                   HelloReply* reply) override {
     std::string prefix("Hello ");
@@ -80,10 +80,12 @@ class VendorServiceImpl final : public Vendor::Service {
     info->set_quantity(inventory_db[food_id].quantity());
     return Status::OK;
   }
+  private:
+  std::unordered_map<uint32_t, InventoryInfo> inventory_db;
 };
 
-void RunServer() {
-  std::string server_address("0.0.0.0:50052");
+void RunServer(std::string addr) {
+  std::string server_address(addr);
   VendorServiceImpl service;
 
   grpc::EnableDefaultHealthCheckService(true);
@@ -104,9 +106,20 @@ void RunServer() {
 }
 
 int main(int argc, char** argv) {
-  int server_number;
-  InitDB();
-  RunServer();
-
+  int server_number = 3;
+  int base_port = 50052;
+  std::vector<std::thread> threads;
+  for (int i = 0; i < server_number; i++) {
+    int port = base_port + i;
+    std::string addr = "localhost:" + std::to_string(port);
+    std::cout << "Running " << addr << std::endl;
+    threads.emplace_back(RunServer, addr);
+  }
+  
+  for (auto & t : threads) {
+    t.join();
+  }
+  
+  threads.clear();
   return 0;
 }
